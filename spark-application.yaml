@@ -1,0 +1,44 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: sample-spark-app
+  namespace: spark-operator
+spec:
+  type: Scala
+  mode: cluster
+  image: "apache/spark:3.5.5"
+  imagePullPolicy: Always
+  mainClass: org.example.App
+  mainApplicationFile: "local:///opt/spark/jars/app/build/libs/app-1.0.0-all.jar"
+  sparkVersion: "3.5.5"
+  restartPolicy:
+    type: Never
+  deps:
+    jars:
+      - "local:///opt/spark/jars/libs/hadoop-aws-3.3.4.jar"
+      - "local:///opt/spark/jars/libs/hadoop-common-3.3.4.jar"
+      - "local:///opt/spark/jars/libs/aws-java-sdk-bundle-1.12.262.jar"
+  volumes:
+    - name: spark-jars
+      hostPath:
+        path: "/Users/albert.oclarit/Documents/projects/ppe-eod/exercises/spark-operator/sample-project"
+        type: Directory
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    labels:
+      version: 3.5.5
+    serviceAccount: spark
+    volumeMounts:
+      - name: spark-jars
+        mountPath: "/opt/spark/jars"
+  executor:
+    cores: 1
+    instances: 1
+    memory: "512m"
+    labels:
+      version: 3.5.5
+    volumeMounts:
+      - name: spark-jars
+        mountPath: "/opt/spark/jars"

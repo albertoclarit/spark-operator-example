@@ -1,0 +1,5 @@
+kind create cluster --name spark-operator  --config=config.yaml
+kind delete cluster --name spark-operator
+
+
+
