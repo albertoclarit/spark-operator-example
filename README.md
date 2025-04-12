@@ -9,6 +9,7 @@ brew install kind
 ```
 - k9s - to monitor and manage k8s
 - helm 
+- kubectl
 
 ### Setup
 - login to Docker
