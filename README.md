@@ -8,6 +8,7 @@
 brew install kind
 ```
 - k9s - to monitor and manage k8s
+- helm 
 
 ### Setup
 - login to Docker
@@ -19,3 +20,34 @@ docker login
 ```
 export DOCKER_REPOSITORY=myregistry/myrepo
 ```
+- Setup Kind
+```
+kind create cluster --name spark-operator  --config=kind/config.yaml
+```
+- install Spark Kubernetes Operator
+```
+helm repo add spark-operator https://kubeflow.github.io/spark-operator
+helm repo update
+
+helm install spark-operator spark-operator/spark-operator \
+    --namespace spark-operator \
+    --set "spark.jobNamespaces"="{}" \
+    --create-namespace
+```
+- Service account setup (give cluster-admin role)
+```
+kubectl apply -f operator-rbac.yaml
+kubectl apply -f spark-rbac.yaml
+kubectl scale deployment spark-operator-controller -n spark-operator --replicas=0
+kubectl scale deployment spark-operator-controller -n spark-operator --replicas=1
+```
+- Build and Push image
+```
+./gradlew buildAndDeploy
+```
+- Submit the application
+```
+kubectl apply -f spark-application.yaml
+```
+- using k9s check if spark driver and 3 executors are running.
+  
