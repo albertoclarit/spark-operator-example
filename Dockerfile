@@ -9,7 +9,7 @@ RUN mkdir -p /opt/spark/work-dir/jars
 RUN mkdir -p /opt/spark/work-dir/running
 RUN mkdir -p /opt/spark/work-dir/data
 # Copy the application JAR
-COPY app/build/libs/app-0.1.0-all.jar  /opt/spark/work-dir/running/spark-app.jar
+COPY app/build/libs/*.jar  /opt/spark/work-dir/running/spark-app.jar
 #COPY large-file.json  /opt/spark/work-dir/data/large-file.json
 COPY flights-1m.parquet  /opt/spark/work-dir/data/flights-1m.parquet
 

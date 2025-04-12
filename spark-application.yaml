@@ -6,7 +6,7 @@ metadata:
 spec:
   type: Java
   mode: cluster
-  image: "albertoclaritdocker/spark-operator-sample:0.0.16"
+  image: "albertoclaritdocker/spark-operator-sample:0.1.12"
   imagePullPolicy: Always
   mainClass: org.example.App
   mainApplicationFile: "local:///opt/spark/work-dir/running/spark-app.jar"
