@@ -46,39 +46,19 @@ tasks.register('updateSparkYaml', UpdateSparkYaml) {
 abstract class SetVersionTask extends DefaultTask {
     @Input
     @Optional
-    abstract Property<String> getNewVersion()
-
-    @Input
-    @Optional
     abstract Property<String> getDockerRepository()
 
     @Internal
     abstract DirectoryProperty getProjectDir()
 
     @InputFile
-    Provider<RegularFile> getInputPropertiesFile() {
-        return projectDir.file('gradle.properties')
-    }
-
-    @OutputFile
-    Provider<RegularFile> getOutputPropertiesFile() {
-        return projectDir.file('gradle.properties')
+    Provider<RegularFile> getVersionPropertiesFile() {
+        return projectDir.file('version.properties')
     }
 
     @OutputFile
     Provider<RegularFile> getSparkApplicationFile() {
         return projectDir.file('../spark-application.yaml')
-    }
-
-    String incrementPatchVersion(String version) {
-        def parts = version.tokenize('.')
-        if (parts.size() != 3) return '0.0.1'
-        
-        def major = parts[0] as Integer
-        def minor = parts[1] as Integer
-        def patch = parts[2] as Integer
-        
-        return "${major}.${minor}.${patch + 1}"
     }
 
     void updateSparkApplicationImage(String repository, String version) {
@@ -98,20 +78,11 @@ abstract class SetVersionTask extends DefaultTask {
 
     @TaskAction
     def updateVersion() {
-        def propsFile = getInputPropertiesFile().get().asFile
         def props = new Properties()
+        getVersionPropertiesFile().get().asFile.withInputStream { props.load(it) }
+        def version = props.getProperty('version.semver')
         
-        if (propsFile.exists()) {
-            propsFile.withInputStream { props.load(it) }
-        }
-        
-        def currentVersion = props.getProperty('releaseVersion', '0.0.0')
-        def version = getNewVersion().orNull ?: incrementPatchVersion(currentVersion)
-        
-        props.setProperty('releaseVersion', version)
-        getOutputPropertiesFile().get().asFile.withOutputStream { props.store(it, null) }
-        
-        println "Updated version to: ${version}"
+        println "Using version from version.properties: ${version}"
 
         // Update spark-application.yaml if repository is provided
         def repository = getDockerRepository().orNull
@@ -122,7 +93,6 @@ abstract class SetVersionTask extends DefaultTask {
 }
 
 tasks.register('setVersion', SetVersionTask) {
-    newVersion = providers.gradleProperty('newVersion')
     dockerRepository = providers.environmentVariable('DOCKER_REPOSITORY')
     projectDir = layout.projectDirectory
 }
@@ -135,14 +105,14 @@ abstract class DockerBuildPushTask extends DefaultTask {
     abstract DirectoryProperty getProjectDir()
 
     @InputFile
-    Provider<RegularFile> getPropertiesFile() {
-        return projectDir.file('gradle.properties')
+    Provider<RegularFile> getVersionPropertiesFile() {
+        return projectDir.file('version.properties')
     }
 
     String readVersion() {
         def props = new Properties()
-        getPropertiesFile().get().asFile.withInputStream { props.load(it) }
-        return props.getProperty('releaseVersion', '0.0.1')
+        getVersionPropertiesFile().get().asFile.withInputStream { props.load(it) }
+        return props.getProperty('version.semver')
     }
 
     @TaskAction
@@ -187,17 +157,21 @@ tasks.register('dockerBuildPush', DockerBuildPushTask) {
     projectDir = layout.projectDirectory
 }
 
+
+
 tasks.register('buildAndDeploy') {
     dependsOn 'clean'
     dependsOn 'shadowJar'
     dependsOn 'copyDependencies'
     dependsOn 'updateSparkYaml'
+    dependsOn 'incrementBuildMeta'
     dependsOn 'setVersion'
     dependsOn 'dockerBuildPush'
     
     tasks.findByName('shadowJar').mustRunAfter 'clean'
     tasks.findByName('copyDependencies').mustRunAfter 'shadowJar'
     tasks.findByName('updateSparkYaml').mustRunAfter 'copyDependencies'
-    tasks.findByName('setVersion').mustRunAfter 'updateSparkYaml'
+    tasks.findByName('incrementBuildMeta').mustRunAfter 'updateSparkYaml'
+    tasks.findByName('setVersion').mustRunAfter 'incrementBuildMeta'
     tasks.findByName('dockerBuildPush').mustRunAfter 'setVersion'
 }

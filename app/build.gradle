@@ -10,9 +10,9 @@ plugins {
     id 'application'
     // Apply the shadow plugin to generate a fat JAR
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    // Apply the semver plugin for semantic versioning
+    id 'net.thauvin.erik.gradle.semver' version '1.0.4'
 }
-
-version = project.hasProperty('releaseVersion') ? project.releaseVersion : '0.1.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -58,11 +58,16 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-shadowJar {
-    archiveBaseName.set('app')
-    archiveClassifier.set('all')
-    archiveVersion.set(version)
-    mergeServiceFiles()
+tasks.named('shadowJar') {
+    doFirst {
+        def semverFile = file('version.properties')
+        def props = new Properties()
+        semverFile.withInputStream { props.load(it) }
+        archiveBaseName.set('app')
+        archiveClassifier.set('all')
+        archiveVersion.set(props.getProperty('version.semver'))
+        mergeServiceFiles()
+    }
 }
 
 configurations {
@@ -82,4 +87,20 @@ task copyDependencies(type: Copy) {
     from configurations.hadoopAwsDeps
     into "${rootProject.projectDir}/libs"
 }
+
+semver {
+    properties = 'version.properties'
+    keysPrefix = 'version.'
+}
+
+incrementBuildMeta {
+    doFirst {
+        if (buildMeta != null && buildMeta != '') {
+            buildMeta = sprintf('%03d', (buildMeta as Integer) + 1)
+        } else {
+            buildMeta = '001'
+        }
+    }
+}
+
 apply from: 'custom.gradle'
