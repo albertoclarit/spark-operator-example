@@ -42,7 +42,7 @@ kubectl apply -f spark-rbac.yaml
 kubectl scale deployment spark-operator-controller -n spark-operator --replicas=0
 kubectl scale deployment spark-operator-controller -n spark-operator --replicas=1
 ```
-- Build and Push image (this will execute **incrementBuildMeta** task every time it run)
+- Build and Push image (This will execute **incrementBuildMeta** task every time it run. In practical use, this should be called by cicd pipeline during the merge process)
 ```
 ./gradlew buildAndDeploy
 ```
