@@ -10,13 +10,9 @@ plugins {
     id 'application'
     // Apply the shadow plugin to generate a fat JAR
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    // Apply the version plugin
-    id 'com.palantir.git-version' version '3.0.0'
 }
 
-// Get version from git tags
-def projectVersion = versionDetails().lastTag ?: '0.1.0'
-version = projectVersion
+version = project.hasProperty('releaseVersion') ? project.releaseVersion : '0.1.0'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -25,12 +21,12 @@ repositories {
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    testImplementation libs.junit.jupiter
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // This dependency is used by the application.
-    implementation libs.guava
+    implementation 'com.google.guava:guava:31.1-jre'
 
     // Apache Spark dependencies
     compileOnly 'org.apache.spark:spark-core_2.12:3.5.5'
@@ -39,13 +35,16 @@ dependencies {
     // Hadoop AWS dependencies
     compileOnly 'org.apache.hadoop:hadoop-aws:3.3.4'
     compileOnly 'org.apache.hadoop:hadoop-common:3.3.4'
+    compileOnly 'org.apache.hadoop:hadoop-client:3.3.4'
+    compileOnly 'org.apache.hadoop:hadoop-hdfs:3.3.4'
+    compileOnly 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.4'
     compileOnly 'com.amazonaws:aws-java-sdk-bundle:1.12.261'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(11)
     }
 }
 
@@ -73,10 +72,27 @@ configurations {
 dependencies {
     hadoopAwsDeps 'org.apache.hadoop:hadoop-aws:3.3.4'
     hadoopAwsDeps 'org.apache.hadoop:hadoop-common:3.3.4'
+    hadoopAwsDeps 'org.apache.hadoop:hadoop-client:3.3.4'
+    hadoopAwsDeps 'org.apache.hadoop:hadoop-hdfs:3.3.4'
+    hadoopAwsDeps 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.4'
     hadoopAwsDeps 'com.amazonaws:aws-java-sdk-bundle:1.12.261'
 }
 
 task copyDependencies(type: Copy) {
     from configurations.hadoopAwsDeps
     into "${rootProject.projectDir}/libs"
+}
+
+task setVersion {
+    doLast {
+        def newVersion = project.hasProperty('newVersion') ? project.newVersion : '0.1.0'
+        def gradlePropsFile = file('gradle.properties')
+        def props = new Properties()
+        if (gradlePropsFile.exists()) {
+            gradlePropsFile.withInputStream { props.load(it) }
+        }
+        props.setProperty('releaseVersion', newVersion)
+        gradlePropsFile.withOutputStream { props.store(it, null) }
+        println "Updated version to: ${newVersion}"
+    }
 }

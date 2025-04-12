@@ -12,15 +12,15 @@ public class App {
         // Create Spark session
         SparkSession spark = SparkSession.builder()
                 .appName("S3 JSON Reader")
-                .master("local[*]")
+               // .master("local[*]")
                 .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
                 .getOrCreate();
 
         try {
             // Read JSON data from S3
             Dataset<Row> df = spark.read()
-                    .option("header", "true")
-                    .json("s3a://nyc-tlc/trip data/yellow_tripdata_2023-01.json");
+                   // .option("header", "true")
+                    .parquet("file:///opt/spark/work-dir/data/flights-1m.parquet");
 
             // Show schema
             System.out.println("Schema:");
@@ -34,7 +34,7 @@ public class App {
             System.out.println("\nTotal number of records: " + df.count());
 
         } catch (Exception e) {
-            System.err.println("Error reading from S3: " + e.getMessage());
+            System.err.println("Error reading from file: " + e.getMessage());
             e.printStackTrace();
         } finally {
             spark.close();

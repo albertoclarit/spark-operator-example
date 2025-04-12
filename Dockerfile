@@ -6,17 +6,18 @@ ENV PATH=$PATH:$SPARK_HOME/bin
 
 # Create directories for our application
 RUN mkdir -p /opt/spark/work-dir/jars
-
+RUN mkdir -p /opt/spark/work-dir/running
+RUN mkdir -p /opt/spark/work-dir/data
 # Copy the application JAR
-COPY app/build/libs/app-1.0.0-all.jar /opt/spark/work-dir/
+COPY app/build/libs/app-0.1.0-all.jar  /opt/spark/work-dir/running/spark-app.jar
+#COPY large-file.json  /opt/spark/work-dir/data/large-file.json
+COPY flights-1m.parquet  /opt/spark/work-dir/data/flights-1m.parquet
 
-# Copy the dependency JARs
-COPY libs/hadoop-aws-3.3.4.jar /opt/spark/work-dir/jars/
-COPY libs/hadoop-common-3.3.4.jar /opt/spark/work-dir/jars/
-COPY libs/aws-java-sdk-bundle-1.12.262.jar /opt/spark/work-dir/jars/
+# Copy all dependency JARs
+COPY libs/*.jar /opt/spark/work-dir/jars/
 
 # Set the working directory
 WORKDIR /opt/spark/work-dir
 
 # The image can be used as follows:
-# docker run <image> /opt/spark/bin/spark-submit --class org.example.App app-1.0.0-all.jar
+# docker run <image> /opt/spark/bin/spark-submit --class org.example.App app.jar

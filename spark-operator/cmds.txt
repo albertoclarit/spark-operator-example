@@ -1,8 +1,13 @@
+
+https://kubeflow.github.io/spark-operator/docs/quick-start-guide.html
+https://kubeflow.github.io/spark-operator/docs/user-guide.html
+
 helm repo add spark-operator https://kubeflow.github.io/spark-operator
 helm repo update
 
 helm install spark-operator spark-operator/spark-operator \
     --namespace spark-operator \
+    --set spark.jobNamespaces="" \
     --create-namespace
 
 helm uninstall spark-operator
@@ -11,4 +16,3 @@ helm status --namespace spark-operator spark-operator
 
 
 
-kubectl apply -f spark-application.yaml

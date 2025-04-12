@@ -1,0 +1,34 @@
+https://kubeflow.github.io/spark-operator/docs/user-guide.html
+
+docker build -t albertoclaritdocker/spark-operator-sample:0.0.14 .
+docker push albertoclaritdocker/spark-operator-sample:0.0.14
+
+docker run -it --rm albertoclaritdocker/spark-operator-sample:0.0.2 /bin/bash
+
+kubectl apply -f spark-application.yaml
+
+kubectl apply -f spark-rbac.yaml
+
+kubectl get sparkapplication -n spark-operator
+
+kubectl describe sparkapplication sample-spark-app -n spark-operator
+
+kubectl get pods -n spark-operator -l sparkoperator.k8s.io/app-name=sample-spark-app
+
+kubectl get events -n spark-operator --sort-by='.lastTimestamp'
+
+
+operator actually watching the wrong namespace
+solution ... delete namespace
+
+
+kubectl apply -f spark-application.yaml
+
+kubectl get sparkapplication -n spark-operator
+
+kubectl describe sparkapplication sample-spark-app -n spark-operator
+
+kubectl get pods -n spark-operator -l sparkoperator.k8s.io/app-name=sample-spark-app
+
+kubectl get events -n spark-operator --sort-by='.lastTimestamp'
+
