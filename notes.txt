@@ -1,7 +1,7 @@
 https://kubeflow.github.io/spark-operator/docs/user-guide.html
 
-docker build -t albertoclaritdocker/spark-operator-sample:0.0.14 .
-docker push albertoclaritdocker/spark-operator-sample:0.0.14
+docker build -t albertoclaritdocker/spark-operator-sample:0.0.16 .
+docker push albertoclaritdocker/spark-operator-sample:0.0.16
 
 docker run -it --rm albertoclaritdocker/spark-operator-sample:0.0.2 /bin/bash
 

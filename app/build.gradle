@@ -44,7 +44,7 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -73,7 +73,7 @@ dependencies {
     hadoopAwsDeps 'org.apache.hadoop:hadoop-aws:3.3.4'
     hadoopAwsDeps 'org.apache.hadoop:hadoop-common:3.3.4'
     hadoopAwsDeps 'org.apache.hadoop:hadoop-client:3.3.4'
-    hadoopAwsDeps 'org.apache.hadoop:hadoop-hdfs:3.3.4'
+  //  hadoopAwsDeps 'org.apache.hadoop:hadoop-hdfs:3.3.4'
     hadoopAwsDeps 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.4'
     hadoopAwsDeps 'com.amazonaws:aws-java-sdk-bundle:1.12.261'
 }
@@ -81,6 +81,51 @@ dependencies {
 task copyDependencies(type: Copy) {
     from configurations.hadoopAwsDeps
     into "${rootProject.projectDir}/libs"
+}
+
+abstract class UpdateSparkYaml extends DefaultTask {
+    @InputDirectory
+    abstract DirectoryProperty getLibsDir()
+
+    @OutputFile
+    abstract RegularFileProperty getYamlFile()
+
+    @TaskAction
+    def updateYaml() {
+        def yamlContent = getYamlFile().get().asFile.text
+        
+        // Find the start of deps.jars section
+        def depsStart = yamlContent.indexOf('  deps:')
+        def jarsStart = yamlContent.indexOf('    jars:', depsStart)
+        def jarsEnd = yamlContent.indexOf('  driver:', jarsStart)
+        
+        // Get all jar files from libs directory
+        def jarFiles = getLibsDir().get().asFile.listFiles()
+            .findAll { it.name.endsWith('.jar') }
+            .collect { it.name }
+            .sort()
+        
+        // Create new jars section
+        def newJarsSection = '  deps:\n    jars:\n'
+        jarFiles.each { jar ->
+            newJarsSection += '      - "local:///opt/spark/work-dir/jars/' + jar + '"\n'
+        }
+        
+        // Replace the old section with new one
+        def newContent = yamlContent.substring(0, depsStart) + 
+                        newJarsSection + 
+                        yamlContent.substring(jarsEnd)
+        
+        getYamlFile().get().asFile.text = newContent
+        
+        println "Updated spark-application.yaml with ${jarFiles.size()} jars"
+    }
+}
+
+tasks.register('updateSparkYaml', UpdateSparkYaml) {
+    dependsOn copyDependencies
+    libsDir = layout.projectDirectory.dir('../libs')
+    yamlFile = layout.projectDirectory.file('../spark-application.yaml')
 }
 
 task setVersion {

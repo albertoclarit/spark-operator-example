@@ -11,7 +11,7 @@ public class App {
     public static void main(String[] args) {
         // Create Spark session
         SparkSession spark = SparkSession.builder()
-                .appName("S3 JSON Reader")
+                .appName("Parquet Reader")
                // .master("local[*]")
                 .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
                 .getOrCreate();

@@ -7,7 +7,7 @@ helm repo update
 
 helm install spark-operator spark-operator/spark-operator \
     --namespace spark-operator \
-    --set spark.jobNamespaces="" \
+    --set "spark.jobNamespaces"="{}" \
     --create-namespace
 
 helm uninstall spark-operator

@@ -1,4 +1,4 @@
-FROM apache/spark:3.5.5
+FROM apache/spark:3.5.5-java17
 
 # Set environment variables
 ENV SPARK_HOME=/opt/spark
